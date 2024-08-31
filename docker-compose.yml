@@ -9,14 +9,13 @@ services:
       - /app/node_modules
     environment:
       NODE_ENV: development
-      # Variáveis de ambiente para conectar ao banco de dados
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: db_measurement
     depends_on:
       - db
   db:
-    image: postgres:15
+    image: postgres:16
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
