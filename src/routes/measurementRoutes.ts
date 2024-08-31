@@ -1,10 +1,9 @@
 import { Router, Request, Response } from "express";
+import { uploadMeasurement } from "../controllers/measurementController";
 
 const router = Router()
 
-router.post('/upload', (req: Request, res: Response) => {
-    return res.send('Implement')
-})
+router.post('/upload', uploadMeasurement)
 
 router.patch('/confirm', (req: Request, res: Response) => {
     return res.send('Implement')

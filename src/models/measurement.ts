@@ -1,14 +1,13 @@
 import { DataTypes, Model, Sequelize } from "sequelize";
-import Customer from "./customer";
 
 class Measurement extends Model {
-    public id!: string;
-    public customer_id!: number;
-    public measure_datetime!: Date;
-    public measure_type!: string;
-    public measure_value!: number;
-    public image_url!: string;
-    public has_confirmed!: boolean;
+    declare id: string;
+    declare customer_id: number;
+    declare measure_datetime: Date;
+    declare measure_type: string;
+    declare measure_value: number;
+    declare image_url: string;
+    declare has_confirmed: boolean;
 
     static initModel(sequelize: Sequelize){
         super.init({
@@ -17,16 +16,12 @@ class Measurement extends Model {
                 defaultValue: DataTypes.UUIDV4,
                 primaryKey: true
             }, 
-            customer_id: {
-                type: DataTypes.INTEGER,
+            customer_code: {
+                type: DataTypes.STRING,
                 allowNull: false,
-                references: {
-                  model: 'customers',
-                  key: 'id',
-                },
               },
             measure_datetime: {
-                type: DataTypes.DATE,
+                type: DataTypes.DATEONLY,
                 allowNull: false,
               },
             measure_type: {
@@ -48,15 +43,6 @@ class Measurement extends Model {
         }, {sequelize,
             modelName: 'measurement',
             tableName: 'measurements'})
-
-        Customer.hasMany(Measurement, {
-            foreignKey: 'customer_id',
-            as: 'measurements'
-        });
-        Measurement.belongsTo(Customer, {
-            foreignKey: 'customer_id',
-            as: 'customer'
-        });
     }
 }
 
