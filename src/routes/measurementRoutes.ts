@@ -1,16 +1,10 @@
 import { Router, Request, Response } from "express";
-import { uploadMeasurement } from "../controllers/measurementController";
+import { uploadMeasurement, confirmMeasurement, listMeasurements } from "../controllers/measurementController";
 
-const router = Router()
+const router = Router();
 
-router.post('/upload', uploadMeasurement)
+router.post('/upload', uploadMeasurement);
+router.patch('/confirm', confirmMeasurement);
+router.get('/:customer_code/list', listMeasurements);
 
-router.patch('/confirm', (req: Request, res: Response) => {
-    return res.send('Implement')
-})
-
-router.get('/:customer_code/list', (req: Request, res: Response) => {
-    return res.send('Implement')
-})
-
-export default router
+export default router;

@@ -3,12 +3,12 @@ import Measurement from "../models/measurement";
 import { constants } from "crypto";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { isBase64, isValidDate, isValidMeasureType, isValidCustomerCode } from '../utils/validation';
+import { isBase64, isValidDate, isValidMeasureType, isValidCustomerCode, isNumeric } from '../utils/validation';
 import * as fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
 
-dotenv.config()
+dotenv.config();
 
 const apiKey = process.env.GEMINI_API_KEY;
 
@@ -97,3 +97,68 @@ export const uploadMeasurement = async (req: Request, res: Response) => {
         measure_uuid: measurement.id,
     });
 }
+
+export const confirmMeasurement = async (req: Request, res: Response) => {
+    const { measure_uuid, confirmed_value } = req.body;
+  
+    if (!measure_uuid || confirmed_value === undefined) {
+      return res.status(400).json({ error_code: 'INVALID_DATA', error_description: 'MISSING DATA' });
+    }
+    
+    const uuid_regex = /^[a-z,0-9,-]{36,36}$/
+
+    if(!uuid_regex.test(measure_uuid)) {
+        return res.status(400).json({ error_code: 'INVALID_DATA', error_description: 'INVALID FORMAT IN UUID CODE' });
+    }
+
+    if(!isNumeric(confirmed_value)) {
+        return res.status(400).json({ error_code: 'INVALID_DATA', error_description: 'INVALID FORMAT IN CONFIRMED VALUE (ONLY NUMERIC VALUE)' });
+    }
+
+    const measurement = await Measurement.findByPk(measure_uuid);
+  
+    if (!measurement) {
+      return res.status(404).json({ error_code: 'MEASURE_NOT_FOUND', error_description: 'MONTH MEASURE NOT FOUND' });
+    }
+  
+    if (measurement.has_confirmed) {
+      return res.status(409).json({ error_code: 'CONFIRMATION_DUPLICATE', error_description: 'MEASURE ALREADY CONFIRMED' });
+    }
+  
+    measurement.measure_value = confirmed_value;
+    measurement.has_confirmed = true;
+    await measurement.save();
+  
+    return res.status(200).json({ success: true });
+};
+
+export const listMeasurements = async (req: Request, res: Response) => {
+    const { customer_code } = req.params;
+    const { measure_type } = req.query;
+  
+    if (measure_type && !['WATER', 'GAS'].includes((measure_type as string).toUpperCase())) {
+      return res.status(400).json({ error_code: 'INVALID_TYPE', error_description: 'Tipo de medição não permitida' });
+    }
+  
+    const whereCondition: any = { customer_code };
+    if (measure_type) {
+      whereCondition.measure_type = (measure_type as string).toUpperCase();
+    }
+  
+    const measurements = await Measurement.findAll({ where: whereCondition });
+  
+    if (measurements.length === 0) {
+      return res.status(404).json({ error_code: 'MEASURES_NOT_FOUND', error_description: 'Nenhuma leitura encontrada' });
+    }
+  
+    return res.status(200).json({
+      customer_code,
+      measures: measurements.map((m) => ({
+        measure_uuid: m.id,
+        measure_datetime: m.measure_datetime,
+        measure_type: m.measure_type,
+        has_confirmed: m.has_confirmed,
+        image_url: m.image_url,
+      })),
+    });
+};

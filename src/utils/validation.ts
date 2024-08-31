@@ -17,3 +17,7 @@ export const isValidCustomerCode = (code: string): boolean => {
     const regex = /^[A-Za-z0-9]+$/;  // Ajuste o regex conforme necessário
     return regex.test(code);
 };
+
+export const isNumeric = (num: number) => { 
+    return !isNaN(num);
+}
